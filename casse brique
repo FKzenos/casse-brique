@@ -11,9 +11,9 @@ NOIR = (0, 0, 0)
 ROUGE = (255, 0, 0)
 VERT = (0, 255, 0)
 BLEU = (0, 0, 255)
-
+JAUNE_OR = ( 255, 199, 38)
 # Paramètres du jeu
-largeur_fenetre = 800
+largeur_fenetre = 544
 hauteur_fenetre = 600
 taille_raquette = 100
 hauteur_raquette = 10
@@ -34,12 +34,12 @@ raquette = pygame.Rect((largeur_fenetre - taille_raquette) // 2, hauteur_fenetre
 balle = pygame.Rect(largeur_fenetre // 2, hauteur_fenetre // 2, balle_rayon, balle_rayon)
 
 # Définition de la barre tout en bas de la fenêtre
-barre = pygame.Rect(0, hauteur_fenetre - 5, largeur_fenetre, 5)
+loseEvent = pygame.Rect(0, hauteur_fenetre - 5, largeur_fenetre, 5)
 
 # Liste de briques
 briques = []
-nombre_briques_ligne = 10
-nombre_lignes_briques = 4
+nombre_briques_ligne = 1
+nombre_lignes_briques = 1
 
 for ligne in range(nombre_lignes_briques):
     for colonne in range(nombre_briques_ligne):
@@ -82,15 +82,25 @@ while True:
         vitesse_balle_y = -vitesse_balle_y
 
     # Gestion de la collision avec la barre tout en bas
-    if balle.colliderect(barre):
+    if balle.colliderect(loseEvent):
         pygame.draw.rect(fenetre, NOIR, (0, 0, largeur_fenetre, hauteur_fenetre))
-        text = font.render("Game Over", True, BLANC)
+        text = font.render("Game Over", True, ROUGE)
         fenetre.blit(text, (largeur_fenetre // 2 - text.get_width() // 2, hauteur_fenetre // 2 - text.get_height() // 2))
         pygame.display.flip()
         pygame.time.delay(2000)  # Pause pendant 2 secondes avant de quitter
         pygame.quit()
         sys.exit()
 
+
+    if len(briques) == 0:
+        pygame.draw.rect(fenetre, NOIR, (0, 0, largeur_fenetre, hauteur_fenetre))
+        text = font.render("Victory", True, JAUNE_OR)
+        fenetre.blit(text,
+                     (largeur_fenetre // 2 - text.get_width() // 2, hauteur_fenetre // 2 - text.get_height() // 2))
+        pygame.display.flip()
+        pygame.time.delay(2000)  # Pause pendant 2 secondes avant de quitter
+        pygame.quit()
+        sys.exit()
     # Gestion des collisions avec les briques
     for brique in briques:
         if balle.colliderect(brique):
@@ -107,7 +117,7 @@ while True:
     pygame.draw.circle(fenetre, balle_couleur, (balle.x, balle.y), balle_rayon)
 
     # Dessin de la barre tout en bas
-    pygame.draw.rect(fenetre, NOIR, barre)
+    pygame.draw.rect(fenetre, NOIR, loseEvent)
 
     # Dessin des briques
     for brique in briques:
