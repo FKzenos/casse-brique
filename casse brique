@@ -38,7 +38,7 @@ loseEvent = pygame.Rect(0, hauteur_fenetre - 5, largeur_fenetre, 5)
 
 # Liste de briques
 briques = []
-nombre_briques_ligne = 5
+nombre_briques_ligne = 10
 nombre_lignes_briques = 4
 
 for ligne in range(nombre_lignes_briques):
