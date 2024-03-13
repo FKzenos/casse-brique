@@ -1,6 +1,5 @@
 import pygame
 import sys
-import random
 
 # Initialisation de Pygame
 pygame.init()
@@ -11,7 +10,8 @@ NOIR = (0, 0, 0)
 ROUGE = (255, 0, 0)
 VERT = (0, 255, 0)
 BLEU = (0, 0, 255)
-JAUNE_OR = ( 255, 199, 38)
+JAUNE_OR = (255, 199, 38)
+
 # Paramètres du jeu
 largeur_fenetre = 544
 hauteur_fenetre = 600
@@ -22,34 +22,68 @@ hauteur_brique = 20
 balle_rayon = 10
 balle_couleur = ROUGE
 
+# Classe de la balle
+class Balle(pygame.sprite.Sprite):
+    def __init__(self, x, y, rayon, couleur):
+        super().__init__()
+        self.image = pygame.Surface((rayon * 2, rayon * 2), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, couleur, (rayon, rayon), rayon)
+        self.rect = self.image.get_rect(center=(x, y))
+        self.vitesse_x = 5
+        self.vitesse_y = -5
+
+    def update(self):
+        self.rect.x += self.vitesse_x
+        self.rect.y += self.vitesse_y
+
+        if self.rect.left <= 0 or self.rect.right >= largeur_fenetre:
+            self.vitesse_x = -self.vitesse_x
+        if self.rect.top <= 0:
+            self.vitesse_y = -self.vitesse_y
+
 # Initialisation de la fenêtre
 fenetre = pygame.display.set_mode((largeur_fenetre, hauteur_fenetre))
 pygame.display.set_caption("Casse-Brique")
 
 # Définition de la raquette
-raquette = pygame.Rect((largeur_fenetre - taille_raquette) // 2, hauteur_fenetre - hauteur_raquette - 10,
-                       taille_raquette, hauteur_raquette)
+class Raquette(pygame.sprite.Sprite):
+    def __init__(self, x, y, largeur, hauteur, couleur):
+        super().__init__()
+        self.image = pygame.Surface((largeur, hauteur))
+        self.image.fill(couleur)
+        self.rect = self.image.get_rect(topleft=(x, y))
 
-# Définition de la balle
-balle = pygame.Rect(largeur_fenetre // 2, hauteur_fenetre // 2, balle_rayon, balle_rayon)
+    def update(self, keys, largeur_fenetre):
+        if keys[pygame.K_LEFT] and self.rect.left > 0:
+            self.rect.x -= 5
+        if keys[pygame.K_RIGHT] and self.rect.right < largeur_fenetre:
+            self.rect.x += 5
+
+# Définition de la raquette
+raquette = Raquette((largeur_fenetre - taille_raquette) // 2, hauteur_fenetre - hauteur_raquette - 10,
+                    taille_raquette, hauteur_raquette, BLEU)
 
 # Définition de la barre tout en bas de la fenêtre
 loseEvent = pygame.Rect(0, hauteur_fenetre - 5, largeur_fenetre, 5)
 
-# Liste de briques
+# Liste de briques avec une protection pour la première ligne
 briques = []
 nombre_briques_ligne = 10
 nombre_lignes_briques = 4
 
 for ligne in range(nombre_lignes_briques):
     for colonne in range(nombre_briques_ligne):
-        brique = pygame.Rect(colonne * (taille_brique + 5), ligne * (hauteur_brique + 5),
-                             taille_brique, hauteur_brique)
+        # Si c'est la première ligne, ajoute une protection
+        if ligne == 0:
+            brique = pygame.Rect(colonne * (taille_brique + 5), ligne * (hauteur_brique + 5) + 10,
+                                 taille_brique, hauteur_brique)
+        else:
+            brique = pygame.Rect(colonne * (taille_brique + 5), ligne * (hauteur_brique + 5),
+                                 taille_brique, hauteur_brique)
         briques.append(brique)
 
-# Vitesse de la balle
-vitesse_balle_x = 5
-vitesse_balle_y = -5
+# Création de la balle
+balle = Balle(largeur_fenetre // 2, hauteur_fenetre // 2, balle_rayon, balle_couleur)
 
 # Police pour l'affichage du texte
 font = pygame.font.SysFont(None, 80)
@@ -62,27 +96,16 @@ while True:
             sys.exit()
 
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] and raquette.left > 0:
-        raquette.x -= 5
-    if keys[pygame.K_RIGHT] and raquette.right < largeur_fenetre:
-        raquette.x += 5
 
-    # Mise à jour de la position de la balle
-    balle.x += vitesse_balle_x
-    balle.y += vitesse_balle_y
-
-    # Gestion des collisions avec les murs
-    if balle.left <= 0 or balle.right >= largeur_fenetre:
-        vitesse_balle_x = -vitesse_balle_x
-    if balle.top <= 0:
-        vitesse_balle_y = -vitesse_balle_y
+    # Mise à jour de la raquette
+    raquette.update(keys, largeur_fenetre)
 
     # Gestion de la collision avec la raquette
-    if balle.colliderect(raquette):
-        vitesse_balle_y = -vitesse_balle_y
+    if balle.rect.colliderect(raquette.rect):
+        balle.vitesse_y = -balle.vitesse_y
 
     # Gestion de la collision avec la barre tout en bas
-    if balle.colliderect(loseEvent):
+    if balle.rect.colliderect(loseEvent):
         pygame.draw.rect(fenetre, NOIR, (0, 0, largeur_fenetre, hauteur_fenetre))
         text = font.render("Game Over", True, ROUGE)
         fenetre.blit(text, (largeur_fenetre // 2 - text.get_width() // 2, hauteur_fenetre // 2 - text.get_height() // 2))
@@ -90,7 +113,6 @@ while True:
         pygame.time.delay(2000)  # Pause pendant 2 secondes avant de quitter
         pygame.quit()
         sys.exit()
-
 
     if len(briques) == 0:
         pygame.draw.rect(fenetre, NOIR, (0, 0, largeur_fenetre, hauteur_fenetre))
@@ -101,20 +123,24 @@ while True:
         pygame.time.delay(2000)  # Pause pendant 2 secondes avant de quitter
         pygame.quit()
         sys.exit()
+
     # Gestion des collisions avec les briques
-    for brique in briques:
-        if balle.colliderect(brique):
+    for brique in briques[:]:
+        if balle.rect.colliderect(brique):
             briques.remove(brique)
-            vitesse_balle_y = -vitesse_balle_y
+            balle.vitesse_y = -balle.vitesse_y
 
     # Dessin de l'arrière-plan
     fenetre.fill(BLANC)
 
+    # Mise à jour de la balle
+    balle.update()
+
     # Dessin de la raquette
-    pygame.draw.rect(fenetre, BLEU, raquette)
+    fenetre.blit(raquette.image, raquette.rect)
 
     # Dessin de la balle
-    pygame.draw.circle(fenetre, balle_couleur, (balle.x, balle.y), balle_rayon)
+    fenetre.blit(balle.image, balle.rect)
 
     # Dessin de la barre tout en bas
     pygame.draw.rect(fenetre, NOIR, loseEvent)
