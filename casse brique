@@ -15,7 +15,7 @@ JAUNE_OR = (255, 199, 38)
 # Paramètres du jeu
 largeur_fenetre = 544
 hauteur_fenetre = 600
-taille_raquette = 1000
+taille_raquette = 100
 hauteur_raquette = 10
 taille_brique = 50
 hauteur_brique = 20
@@ -63,19 +63,43 @@ class Brique(pygame.sprite.Sprite):
         self.image = pygame.Surface((taille_brique, hauteur_brique))  # Taille de la brique
         self.image.fill(self.couleur)
         self.rect = self.image.get_rect(topleft=(x, y))
-        self.contour_vert = False  # Indicateur pour dessiner le contour vert
 
-    def update(self):
+class GrosseBrique(Brique):
+    def __init__(self, x, y):
+        super().__init__(x, y, 2, JAUNE_OR)
 
-        if self.pv == 1:
-            self.contour_vert = True
-        else:
-            self.contour_vert = False
+# Classe pour le menu de pause
+class MenuPause:
+    def __init__(self):
+        self.font = pygame.font.SysFont(None, 36)
+        self.options = ["Reprendre", "Quitter"]
+        self.selected_option = 0
 
-    def dessiner_contour(self):
-        if self.contour_vert:
-            pygame.draw.rect(self.image, VERT, self.image.get_rect(), 10)
+    def draw(self, fenetre):
+        fenetre.fill(BLANC)
+        titre_text = self.font.render("Pause", True, NOIR)
+        description_text = self.font.render("(appuyez sur Entrée pour sélectionner)", True, BLEU)
+        fenetre.blit(titre_text, (largeur_fenetre // 2 - titre_text.get_width() // 2, 200))
+        fenetre.blit(description_text, (130, 400))
+        for i, option in enumerate(self.options):
+            text = self.font.render(option, True, NOIR if i != self.selected_option else ROUGE)
+            fenetre.blit(text, (largeur_fenetre // 2 - text.get_width() // 2, 300 + i * 50))
 
+    def handle_event(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                self.selected_option = (self.selected_option - 1) % len(self.options)
+            elif event.key == pygame.K_DOWN:
+                self.selected_option = (self.selected_option + 1) % len(self.options)
+            elif event.key == pygame.K_RETURN:
+                if self.selected_option == 0:
+                    return "Reprendre"
+                elif self.selected_option == 1:
+                    return "Quitter"
+        return None
+
+menu_pause = MenuPause()
+pause = False
 
 # Initialisation de la fenêtre
 fenetre = pygame.display.set_mode((largeur_fenetre, hauteur_fenetre))
@@ -89,28 +113,24 @@ briques = []
 
 # Ajout de briques
 nombre_briques_ligne = 10
-nombre_lignes_briques = 1
+nombre_lignes_briques = 4
 espace_entre_briques = 5
 
 for ligne in range(nombre_lignes_briques):
     for colonne in range(nombre_briques_ligne):
         x = colonne * (taille_brique + espace_entre_briques)
         y = ligne * (hauteur_brique + espace_entre_briques)
-        pv = 2 if ligne == 0 else 1
-        brique = Brique(x, y, pv, VERT)
-        if pv == 2:
-            brique = Brique(x,y,pv,JAUNE_OR)
+        if ligne == 0:
+            brique = GrosseBrique(x, y)
+        else:
+            brique = Brique(x, y, 1, VERT)
         briques.append(brique)
-
-for brique in briques:
-    brique.dessiner_contour()
-
 
 # Création de la balle
 balle = Balle(largeur_fenetre // 2, hauteur_fenetre // 2, balle_rayon, balle_couleur)
 
 # Création de la raquette
-raquette = Raquette((largeur_fenetre - taille_raquette) // 2, hauteur_fenetre - hauteur_raquette - 20,
+raquette = Raquette((largeur_fenetre - taille_raquette) // 2, hauteur_fenetre - hauteur_raquette - 2,
                         taille_raquette, hauteur_raquette, BLEU)
 
 # Police pour l'affichage du texte
@@ -121,9 +141,27 @@ running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
-    balle_temporisation = 0
+            pygame.quit()
+            sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pause = not pause
 
+    if pause:
+        option = None
+        while option is None:
+            menu_pause.draw(fenetre)
+            pygame.display.flip()
+            for event in pygame.event.get():
+                option = menu_pause.handle_event(event)
+                if option == "Quitter":
+                    pygame.quit()
+                    sys.exit()
+            pygame.time.Clock().tick(30)
+        if option == "Reprendre":
+            pause = False
+            continue
+    balle_temporisation = 0
 
     keys = pygame.key.get_pressed()
 
@@ -168,7 +206,7 @@ while running:
     if balle_temporisation > 0:
         balle_temporisation -= 1
 
- # Dessin de l'arrière-plan
+    # Dessin de l'arrière-plan
     fenetre.fill(BLANC)
 
     # Mise à jour de la balle
@@ -191,7 +229,7 @@ while running:
     pygame.display.flip()
 
     # Limiter la vitesse de la boucle
-    pygame.time.Clock().tick(300)
+    pygame.time.Clock().tick(60)
 
 pygame.quit()
 sys.exit()
