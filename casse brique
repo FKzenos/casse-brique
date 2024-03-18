@@ -28,8 +28,8 @@ class Balle(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.Surface((rayon * 2, rayon * 2), pygame.SRCALPHA)
         pygame.draw.circle(self.image, couleur, (rayon, rayon),rayon)
-        self.rect = self.image.get_rect(center=(x, y))
-        self.vitesse_x = -5
+        self.rect = self.image.get_rect(center=(x,y))
+        self.vitesse_x = 5
         self.vitesse_y = 5
 
     def update(self):
@@ -80,7 +80,7 @@ class MenuPause:
         titre_text = self.font.render("Pause", True, NOIR)
         description_text = self.font.render("(appuyez sur Entrée pour sélectionner)", True, BLEU)
         fenetre.blit(titre_text, (largeur_fenetre // 2 - titre_text.get_width() // 2, 200))
-        fenetre.blit(description_text, (130, 400))
+        fenetre.blit(description_text, (50, 400))
         for i, option in enumerate(self.options):
             text = self.font.render(option, True, NOIR if i != self.selected_option else ROUGE)
             fenetre.blit(text, (largeur_fenetre // 2 - text.get_width() // 2, 300 + i * 50))
