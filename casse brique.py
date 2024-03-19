@@ -1,6 +1,6 @@
 import pygame
 import sys
-
+#Mokrane glhf
 # Initialisation de Pygame
 pygame.init()
 
@@ -30,6 +30,7 @@ option_font = pygame.font.SysFont(None, 50)
 titre_font = pygame.font.SysFont(None, 80)
 options = ["Jouer", "Quitter"]
 selected_option = 0
+
 
 class MenuPrincipal:
     def __init__(self):
@@ -105,6 +106,10 @@ class Brique(pygame.sprite.Sprite):
 class GrosseBrique(Brique):
     def __init__(self, x, y):
         super().__init__(x, y, 2, JAUNE_OR)
+        self.points = 3  # Nouveau attribut
+
+    def get_points(self):
+        return self.points
 
 
 # Liste de briques
@@ -204,7 +209,7 @@ while not running:
     # Affichage du menu principal
     menu_principal.draw(fenetreMenu)
     pygame.display.flip()
-
+score=0
 # Boucle principale du jeu
 while running:
     for event in pygame.event.get():
@@ -285,6 +290,7 @@ while running:
         if balle.rect.colliderect(brique.rect):
             if balle_temporisation <= 0:
                 brique.pv -= 1
+                score += 1
                 balle.vitesse_y = -balle.vitesse_y
 
                 if brique.pv == 0:
@@ -311,13 +317,18 @@ while running:
 
     # Dessin des briques
     for brique in briques:
-        fenetre.blit(brique.image, brique.rect)
+         fenetre.blit(brique.image, brique.rect)
+
+    # Affichage du score (dans la boucle principale)
+    score_text = font.render("Score: " + str(score), True, NOIR)
+    fenetre.blit(score_text, (0, 300))  # Positionnez le texte en haut à gauche
 
     # Mise à jour de l'affichage
     pygame.display.flip()
 
     # Limiter la vitesse de la boucle
     pygame.time.Clock().tick(60)
+
 
 pygame.quit()
 sys.exit()
