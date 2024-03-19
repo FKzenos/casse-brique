@@ -1,6 +1,6 @@
 import pygame
 import sys
-#Mokrane glhf
+
 # Initialisation de Pygame
 pygame.init()
 
@@ -23,6 +23,7 @@ balle_rayon = 10
 balle_couleur = ROUGE
 
 # Paramètres du menu principal
+# pygame.font.SysFont sert a mettre la police
 largeur_fenetreMenu = 544
 hauteur_fenetreMenu = 600
 titre = "Menu Principal"
@@ -31,32 +32,39 @@ titre_font = pygame.font.SysFont(None, 80)
 options = ["Jouer", "Quitter"]
 selected_option = 0
 
-
+# Classe pour le menu principal
 class MenuPrincipal:
     def __init__(self):
         self.selected_option = 0
 
     def draw(self, fenetre):
+        # Dessine le fond du menu
         fenetre.fill(BLANC)
+        # Dessine le titre du menu
         titre_text = titre_font.render("Menu Principal", True, NOIR)
         fenetre.blit(titre_text, (largeur_fenetreMenu // 2 - titre_text.get_width() // 2, 100))
+        # Dessine les options du menu
         for i, option in enumerate(options):
             text = option_font.render(option, True, NOIR if i != self.selected_option else ROUGE)
             fenetre.blit(text, (largeur_fenetreMenu // 2 - text.get_width() // 2, 300 + i * 50))
 
-    def handle_event(self, event):
+    def PressEvent(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
+                # Déplace la sélection vers le haut
                 self.selected_option = (self.selected_option - 1) % len(options)
             elif event.key == pygame.K_DOWN:
+                # Déplace la sélection vers le bas
                 self.selected_option = (self.selected_option + 1) % len(options)
             elif event.key == pygame.K_RETURN:
+                # Gère la sélection d'une option
                 if self.selected_option == 0:
-                    return "Jouer"
+                    return "Jouer"  # Retourne "Jouer" si l'option est "Jouer"
                 elif self.selected_option == 1:
-                    return "Quitter"
+                    return "Quitter"  # Retourne "Quitter" si l'option est "Quitter"
         return None
 
+#initialise la fenetre du menu principal
 fenetreMenu = pygame.display.set_mode((largeur_fenetreMenu, hauteur_fenetreMenu))
 pygame.display.set_caption(titre)
 
@@ -71,6 +79,7 @@ class Balle(pygame.sprite.Sprite):
         self.vitesse_x = 0
         self.vitesse_y = 5
 
+#permet a la balle de se déplacer et de vérifier si il touche un bord
     def update(self):
         self.rect.x += self.vitesse_x
         self.rect.y += self.vitesse_y
@@ -88,6 +97,7 @@ class Raquette(pygame.sprite.Sprite):
         self.image.fill(couleur)
         self.rect = self.image.get_rect(topleft=(x, y))
 
+#vérifie si la flêche droite ou gauche est presser et si il touche un bord
     def update(self, keys, largeur_fenetre):
         if keys[pygame.K_LEFT] and self.rect.left > 0:
             self.rect.x -= 5
@@ -106,10 +116,6 @@ class Brique(pygame.sprite.Sprite):
 class GrosseBrique(Brique):
     def __init__(self, x, y):
         super().__init__(x, y, 2, JAUNE_OR)
-        self.points = 3  # Nouveau attribut
-
-    def get_points(self):
-        return self.points
 
 
 # Liste de briques
@@ -121,6 +127,7 @@ nombre_lignes_briques = 4
 espace_entre_briques = 5
 
 
+
 # Classe pour le menu de pause
 class MenuPause:
     def __init__(self):
@@ -129,22 +136,28 @@ class MenuPause:
         self.selected_option = 0
 
     def draw(self, fenetre):
+        # Dessine le fond du menu
         fenetre.fill(BLANC)
+        # Dessine le titre du menu
         titre_text = self.font.render("Pause", True, NOIR)
         description_text = self.font.render("(appuyez sur Entrée pour sélectionner)", True, BLEU)
         fenetre.blit(titre_text, (largeur_fenetre // 2 - titre_text.get_width() // 2, 200))
         fenetre.blit(description_text, (50, 400))
+        # Dessine les options du menu
         for i, option in enumerate(self.options):
             text = self.font.render(option, True, NOIR if i != self.selected_option else ROUGE)
             fenetre.blit(text, (largeur_fenetre // 2 - text.get_width() // 2, 300 + i * 50))
 
-    def handle_event(self, event):
+    def PressEvent(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
+                # Déplace la sélection vers le haut
                 self.selected_option = (self.selected_option - 1) % len(self.options)
             elif event.key == pygame.K_DOWN:
+                # Déplace la sélection vers le bas
                 self.selected_option = (self.selected_option + 1) % len(self.options)
             elif event.key == pygame.K_RETURN:
+                # Gère la sélection d'une option
                 if self.selected_option == 0:
                     return "Reprendre"
                 elif self.selected_option == 1:
@@ -158,7 +171,7 @@ pause = False
 fenetre = pygame.display.set_mode((largeur_fenetre, hauteur_fenetre))
 pygame.display.set_caption("Casse-Brique")
 
-# Défini la barre tout en bas de la fenêtre
+# Défini la barre du gameover tout en bas de la fenêtre
 loseZone = pygame.Rect(0, hauteur_fenetre - 5, largeur_fenetre, 5)
 
 
@@ -189,6 +202,7 @@ font = pygame.font.SysFont(None, 80)
 running = False
 while not running:
     for event in pygame.event.get():
+        #définit l'action de pygame.QUIT
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
@@ -209,7 +223,7 @@ while not running:
     # Affichage du menu principal
     menu_principal.draw(fenetreMenu)
     pygame.display.flip()
-score=0
+
 # Boucle principale du jeu
 while running:
     for event in pygame.event.get():
@@ -226,7 +240,7 @@ while running:
             menu_pause.draw(fenetre)
             pygame.display.flip()
             for event in pygame.event.get():
-                option = menu_pause.handle_event(event)
+                option = menu_pause.PressEvent(event)
                 if option == "Quitter":
                     pygame.quit()
                     sys.exit()
@@ -239,7 +253,7 @@ while running:
             menu_principal.draw(fenetreMenu)
             option = None
             for event in pygame.event.get():
-                option = menu_principal.handle_event(event)
+                option = menu_principal.PressEvent(event)
                 if option:
                     break
             if option == "Jouer":
@@ -258,6 +272,8 @@ while running:
     # collision pour la raquette
     if balle.rect.colliderect(raquette.rect):
         # Calcul de la position de la collision par rapport à la raquette
+        #collision calcul la position de la balle par rapport a la raquette pour savoir si la balle doit aller a droite ou a gauche
+        #proportion permet de jaugé la puissance en fonction de la collision de la balle sur la raquette, si la balle est très a droite par rapport a la raquette alors la balle partira très a droite
         collision = balle.rect.centerx - raquette.rect.centerx
         proportion = collision / (raquette.rect.width / 2)
 
@@ -271,32 +287,36 @@ while running:
         text = font.render("Game Over", True, ROUGE)
         fenetre.blit(text, (largeur_fenetre // 2 - text.get_width() // 2, hauteur_fenetre // 2 - text.get_height() // 2))
         pygame.display.flip()
-        pygame.time.delay(2000)
+        pygame.time.delay(2000) #pause pendant 2sec
         pygame.quit()
         sys.exit()
 
     if len(briques) == 0:
         pygame.draw.rect(fenetre, NOIR, (0, 0, largeur_fenetre, hauteur_fenetre))
         text = font.render("Victory", True, JAUNE_OR)
-        fenetre.blit(text,
-                     (largeur_fenetre // 2 - text.get_width() // 2, hauteur_fenetre // 2 - text.get_height() // 2))
+        fenetre.blit(text,(largeur_fenetre // 2 - text.get_width() // 2, hauteur_fenetre // 2 - text.get_height() // 2))
         pygame.display.flip()
         pygame.time.delay(2000)
         pygame.quit()
         sys.exit()
 
-    # collisions des briques
+
     for brique in briques[:]:
+        # Vérifier si la balle entre en collision avec la brique
         if balle.rect.colliderect(brique.rect):
+            # Vérifier si la temporisation de la balle est écoulée
             if balle_temporisation <= 0:
+                # Réduire les points de vie de la brique et inverser la direction verticale de la balle
                 brique.pv -= 1
-                score += 1
                 balle.vitesse_y = -balle.vitesse_y
 
+                # Si la brique n'a plus de points de vie, elle est supp de la liste
                 if brique.pv == 0:
                     briques.remove(brique)
 
-                balle_temporisation = 0.2 * 60
+                # Réinitialise la temporisation de la balle pour empêcher les collisions répétitives
+                balle_temporisation = 0.2 * 60  # 0.2 seconde avec 60 FPS
+
     if balle_temporisation > 0:
         balle_temporisation -= 1
 
@@ -317,18 +337,13 @@ while running:
 
     # Dessin des briques
     for brique in briques:
-         fenetre.blit(brique.image, brique.rect)
-
-    # Affichage du score (dans la boucle principale)
-    score_text = font.render("Score: " + str(score), True, NOIR)
-    fenetre.blit(score_text, (0, 300))  # Positionnez le texte en haut à gauche
+        fenetre.blit(brique.image, brique.rect)
 
     # Mise à jour de l'affichage
     pygame.display.flip()
 
     # Limiter la vitesse de la boucle
     pygame.time.Clock().tick(60)
-
 
 pygame.quit()
 sys.exit()
