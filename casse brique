@@ -22,9 +22,8 @@ hauteur_brique = 20
 balle_rayon = 10
 balle_couleur = ROUGE
 
-
-# Paramètres du menu
-largeur_fenetreMenu = 800
+# Paramètres du menu principal
+largeur_fenetreMenu = 544
 hauteur_fenetreMenu = 600
 titre = "Menu Principal"
 option_font = pygame.font.SysFont(None, 50)
@@ -32,15 +31,11 @@ titre_font = pygame.font.SysFont(None, 80)
 options = ["Jouer", "Quitter"]
 selected_option = 0
 
-# Création de la fenêtre
-fenetreMenu = pygame.display.set_mode((largeur_fenetre, hauteur_fenetre))
-pygame.display.set_caption(titre)
-
 class MenuPrincipal:
     def __init__(self):
         self.selected_option = 0
 
-    def draw(self, fenetreMenu):
+    def draw(self, fenetre):
         fenetre.fill(BLANC)
         titre_text = titre_font.render("Menu Principal", True, NOIR)
         fenetre.blit(titre_text, (largeur_fenetreMenu // 2 - titre_text.get_width() // 2, 100))
@@ -61,9 +56,10 @@ class MenuPrincipal:
                     return "Quitter"
         return None
 
+fenetreMenu = pygame.display.set_mode((largeur_fenetreMenu, hauteur_fenetreMenu))
+pygame.display.set_caption(titre)
 
 menu_principal = MenuPrincipal()
-
 # balle
 class Balle(pygame.sprite.Sprite):
     def __init__(self, x, y, rayon, couleur):
@@ -110,6 +106,7 @@ class GrosseBrique(Brique):
     def __init__(self, x, y):
         super().__init__(x, y, 2, JAUNE_OR)
 
+
 # Liste de briques
 briques = []
 
@@ -152,11 +149,11 @@ class MenuPause:
 menu_pause = MenuPause()
 pause = False
 
-# Initialisation de la fenêtre
+# définit la fenêtre
 fenetre = pygame.display.set_mode((largeur_fenetre, hauteur_fenetre))
 pygame.display.set_caption("Casse-Brique")
 
-# Définition de la barre tout en bas de la fenêtre
+# Défini la barre tout en bas de la fenêtre
 loseZone = pygame.Rect(0, hauteur_fenetre - 5, largeur_fenetre, 5)
 
 
@@ -178,11 +175,37 @@ balle = Balle(largeur_fenetre // 2, hauteur_fenetre // 2, balle_rayon, balle_cou
 raquette = Raquette((largeur_fenetre - taille_raquette) // 2, hauteur_fenetre - hauteur_raquette - 2,
                         taille_raquette, hauteur_raquette, BLEU)
 
-# Police pour l'affichage du texte
+# Police texte
 font = pygame.font.SysFont(None, 80)
 
+
+
+#boucle principale MenuPrincipal
+running = False
+while not running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                menu_principal.selected_option = (menu_principal.selected_option - 1) % len(options)
+            elif event.key == pygame.K_DOWN:
+                menu_principal.selected_option = (menu_principal.selected_option + 1) % len(options)
+            elif event.key == pygame.K_RETURN:
+                if menu_principal.selected_option == 0:
+                    # Commencer le jeu
+                    running = True
+                elif menu_principal.selected_option == 1:
+                    # Quitter le jeu
+                    pygame.quit()
+                    sys.exit()
+
+    # Affichage du menu principal
+    menu_principal.draw(fenetreMenu)
+    pygame.display.flip()
+
 # Boucle principale du jeu
-running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -191,26 +214,6 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 pause = not pause
-
-    menu_principal.draw(fenetreMenu)
-
-    option = None
-    for event in pygame.event.get():
-        option = menu_principal.handle_event(event)
-        if option:
-            break
-
-    # Si l'option est sélectionnée, exécuter l'action correspondante
-    if option == "Jouer":
-        # Lancer le jeu
-        print("Lancement du jeu...")
-        # Ici, vous pouvez ajouter votre code pour lancer le jeu
-    elif option == "Quitter":
-        pygame.quit()
-        sys.exit()
-
-    # Mise à jour de l'affichage
-    pygame.display.flip()
 
     if pause:
         option = None
@@ -226,6 +229,20 @@ while running:
         if option == "Reprendre":
             pause = False
             continue
+
+        if not pause:
+            menu_principal.draw(fenetreMenu)
+            option = None
+            for event in pygame.event.get():
+                option = menu_principal.handle_event(event)
+                if option:
+                    break
+            if option == "Jouer":
+                pause = False
+            elif option == "Quitter":
+                pygame.quit()
+                sys.exit()
+
     balle_temporisation = 0
 
     keys = pygame.key.get_pressed()
@@ -233,17 +250,17 @@ while running:
     # Mise à jour de la raquette
     raquette.update(keys, largeur_fenetre)
 
-    # Gestion de la collision avec la raquette
+    # collision pour la raquette
     if balle.rect.colliderect(raquette.rect):
         # Calcul de la position de la collision par rapport à la raquette
         collision = balle.rect.centerx - raquette.rect.centerx
-        proportion = collision / (raquette.rect.width / 2)  # Valeur entre -1 et 1
+        proportion = collision / (raquette.rect.width / 2)
 
         # Ajustement de la direction de la balle en fonction de la position de collision
-        balle.vitesse_y = -balle.vitesse_y  # La balle rebondit toujours verticalement
-        balle.vitesse_x = 5 * proportion  # Ajustez la vitesse horizontale en fonction de la position de collision
+        balle.vitesse_y = -balle.vitesse_y
+        balle.vitesse_x = 5 * proportion
 
-    # Gestion de la collision avec le fond
+    # loseEvent
     if balle.rect.colliderect(loseZone):
         pygame.draw.rect(fenetre, NOIR, (0, 0, largeur_fenetre, hauteur_fenetre))
         text = font.render("Game Over", True, ROUGE)
@@ -263,10 +280,10 @@ while running:
         pygame.quit()
         sys.exit()
 
-    # Gestion des collisions avec les briques
+    # collisions des briques
     for brique in briques[:]:
         if balle.rect.colliderect(brique.rect):
-            if balle_temporisation <= 0:  # Vérifie si la temporisation est écoulée
+            if balle_temporisation <= 0:
                 brique.pv -= 1
                 balle.vitesse_y = -balle.vitesse_y
 
